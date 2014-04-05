@@ -3,7 +3,7 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 class Cell(QWidget):
-    
+
     def __init__(self):
         QWidget.__init__(self)
 
@@ -25,7 +25,7 @@ class Cell(QWidget):
         self.slider.setValue(self.speed)
         self.connect(self.timer, SIGNAL("timeout()"),self.sand)
         self.connect(self.stbn, SIGNAL("clicked()"),self.start)
-        self.connect(self.clbn, SIGNAL("clicked()"),self.clean)   
+        self.connect(self.clbn, SIGNAL("clicked()"),self.clean)
         self.connect(self.slider, SIGNAL('valueChanged(int)'),self.setValue)
         buttonLayout=QHBoxLayout()
         buttonLayout.addWidget(self.stbn)
@@ -36,21 +36,20 @@ class Cell(QWidget):
         layout.addWidget(self.slider,Qt.AlignCenter)
         self.setLayout(layout)
         self.resize(450,480)
-    
+
     def border(self):
         for i in (0,35):
             for j in range(36):
                 self.table[j][i]=2
         for i in range(1,35):
             self.table[35][i]=2
-        
-        
+
     def setValue(self):
         self.speed = self.slider.value()
         if self.run == True:
             self.timer.stop()
-            self.timer.start(self.speed) 
-                
+            self.timer.start(self.speed)
+
     def start(self):
         if self.run == False:
             self.run = True
@@ -62,14 +61,14 @@ class Cell(QWidget):
             self.stbn.setToolTip('Start')
             self.stbn.setText('Start Symulacji')
             self.timer.stop()
-            
+
     def clean(self):
         for i in range(36):
             for j in range(36):
                 self.table[i][j]=0
         self.border()
         self.repaint()
-            
+
     def mousePressEvent(self, event):
         x=(event.x()-50)/10
         y=(event.y()-50)/10
@@ -80,16 +79,17 @@ class Cell(QWidget):
                     self.table[y][x]=0
                 else:
                     self.table[y][x]=1
-            else:
-                if button == 2:
-                    if self.table[y][x]==2:
-                        self.table[y][x]=0
-                    else:
-                        self.table[y][x]=2
+
+            elif button == 2:
+                if self.table[y][x]==2:
+                    self.table[y][x]=0
+                else:
+                    self.table[y][x]=2
+
             self.repaint()
         else:
-            print "zle"
-            
+            pass
+
     def mouseMoveEvent(self, event):
         x=(event.x()-50)/10
         y=(event.y()-50)/10
@@ -100,35 +100,31 @@ class Cell(QWidget):
                     self.table[y][x]=0
                 else:
                     self.table[y][x]=1
-            else:
-                if button == 2:
-                    if self.table[y][x]==2:
-                        self.table[y][x]=0
-                    else:
-                        self.table[y][x]=2
+
+            elif button == 2:
+                if self.table[y][x]==2:
+                    self.table[y][x]=0
+                else:
+                    self.table[y][x]=2
+
             self.repaint()
         else:
-            print "zle"
-                    
+            pass
+
     def paintEvent(self, event):
         painter = QPainter()
         painter.begin(self)
         painter.fillRect(event.rect(), QBrush(Qt.white))
         painter.setRenderHint(QPainter.Antialiasing)
         painter.setPen(QPen(QBrush(Qt.gray), 1, Qt.SolidLine))
-        #painter.drawRect(self.largest_rect)
-        #for i in range(50,410,10):
-        #    for j in range(50,410,10):
-        #        self.painter.drawRect(j,i,10,10)
         for i in range(36):
             a=i*10+50
             for j in range(36):
                 b=j*10+50
                 if self.table[j][i]==1:
                     painter.fillRect(a,b,10,10,QBrush(Qt.blue))
-                else:
-                    if self.table[j][i]==2:
-                        painter.fillRect(a,b,10,10,QBrush(Qt.black))
+                elif self.table[j][i]==2:
+                    painter.fillRect(a,b,10,10,QBrush(Qt.black))
                 #rysowanie siatki linii
         for i in range(60,410,10):
             painter.drawLine(60,i,400,i)
@@ -141,22 +137,20 @@ class Cell(QWidget):
             for k in range(34,-1,-1):
                 if self.table[l][k] == 1:
                     if self.table[l+1][k] == 0:
-                        self.table[l][k] =  0
+                        self.table[l][k] = 0
                         self.table[l+1][k] = 1
-                    else :
-                        if self.table[l+1][k+1] == 0 and self.table[l][k+1] != 2:
-                            self.table[l][k] = 0
-                            self.table[l+1][k+1] = 1
-                        else :
-                            if self.table[l+1][k-1] == 0 and self.table[l][k-1] == 0:
-                                self.table[l][k]=0
-                                self.table[l+1][k-1] = 1
+                    elif self.table[l+1][k+1] == 0 and self.table[l][k+1] != 2:
+                        self.table[l][k] = 0
+                        self.table[l+1][k+1] = 1
+                    elif self.table[l+1][k-1] == 0 and self.table[l][k-1] == 0:
+                        self.table[l][k]=0
+                        self.table[l+1][k-1] = 1
         self.repaint()
-        
 
-    
-    
-                
+
+
+
+
 if __name__ == "__main__":
 
     app = QApplication(sys.argv)
