@@ -1,4 +1,4 @@
 pyCA
 ====
 
-Cellular Automats in Python, gui is written pyQt
+Cellular Automats in Python, gui in pyQt
