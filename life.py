@@ -5,34 +5,22 @@ import sys
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
+from cellular_automaton import ConwayLifeOutflow
 from config import NUM_OF_CELLS_X, NUM_OF_CELLS_Y, CELL_SIZE, \
     MARGIN, WINDOW_Y_SIZE, WINDOW_X_SIZE
 
 
-class Cell(QWidget):
-
-    @staticmethod
-    def _gen_matrix(x, y):
-        return [[0 for _ in range(x)]
-                for _ in range(y)]
-
-    @staticmethod
-    def _copy_matrix(matrix):
-        return [list(i) for i in matrix]
+class CellularAutomatonQt(QWidget):
 
     def __init__(self):
         QWidget.__init__(self)
 
         self.speed = 1000
-        #2 rows invisible
         self.num_of_cells_x = NUM_OF_CELLS_X
-        self.total_num_of_cells_x = NUM_OF_CELLS_X+2
-        #2 rows invisible
         self.num_of_cells_y = NUM_OF_CELLS_Y
-        self.total_num_of_cells_y = NUM_OF_CELLS_Y+2
         self.cell_size = CELL_SIZE
-        self.table = self._gen_matrix(self.total_num_of_cells_x,
-                                      self.total_num_of_cells_y)
+        self.cellular_automaton = ConwayLifeOutflow(self.num_of_cells_x, self.num_of_cells_y)
+
         self.run = False
         self.setWindowTitle('Automat komorkowy')
         self.setToolTip('Zaznacz komorki')
@@ -82,31 +70,26 @@ class Cell(QWidget):
             self.timer.stop()
 
     def clean(self):
-        self.table = self._gen_matrix(self.total_num_of_cells_x,
-                                      self.total_num_of_cells_y)
+        self.start()
+        self.cellular_automaton.clean()
         self.repaint()
 
     def mousePressEvent(self, event):
-        x, y = self._convert_cordinates(event.x(), event.y())
+        x, y = self._convert_coordinates(event.x(), event.y())
         self._update_cell(x, y)
 
     def mouseMoveEvent(self, event):
-        x, y = self._convert_cordinates(event.x(), event.y())
+        x, y = self._convert_coordinates(event.x(), event.y())
         self._update_cell(x, y)
 
-    def _convert_cordinates(self, x, y):
+    def _convert_coordinates(self, x, y):
         x = (x - MARGIN)/self.cell_size
         y = (y - MARGIN)/self.cell_size
         return x, y
 
     def _update_cell(self, x, y):
         if 0 <= x < self.num_of_cells_x and 0 <= y < self.num_of_cells_y:
-            x += 1
-            y += 1
-            if self.table[y][x] == 1:
-                self.table[y][x] = 0
-            else:
-                self.table[y][x] = 1
+            self.cellular_automaton.update_cell(x, y)
             self.repaint()
 
     def paintEvent(self, event):
@@ -114,19 +97,22 @@ class Cell(QWidget):
         painter.begin(self)
         painter.fillRect(event.rect(), QBrush(Qt.white))
         painter.setRenderHint(QPainter.Antialiasing)
-        for i in range(1, self.num_of_cells_x+1):
-            a = (i-1)*self.cell_size+MARGIN
-            for j in range(1, self.num_of_cells_y+1):
-                b = (j-1)*self.cell_size+MARGIN
-                if self.table[j][i] == 1:
-                    painter.fillRect(a, b, self.cell_size, self.cell_size, QBrush(Qt.blue))
+        for i in range(self.num_of_cells_x):
+            a = i*self.cell_size+MARGIN
 
-        #rysowanie siatki linii
+            for j in range(self.num_of_cells_y):
+                b = j*self.cell_size+MARGIN
+
+                to_paint, color = self.cellular_automaton.check_cell(j, i)
+
+                if to_paint:
+                    painter.fillRect(a, b, self.cell_size, self.cell_size, QBrush(QColor(color)))
+
         self._draw_line(painter)
         painter.end()
 
     def _draw_line(self, painter, line_width=1, line_color=Qt.gray, line_style=Qt.SolidLine):
-        #rysowanie siatki linii
+        #rysowanie siatki
         painter.setPen(QPen(QBrush(Qt.gray), 1, Qt.SolidLine))
 
         line_start = MARGIN
@@ -139,47 +125,13 @@ class Cell(QWidget):
         for i in range(line_start, line_stop+self.cell_size, self.cell_size):
             painter.drawLine(i, line_start, i, line_stop)
 
-    def life_rules(self, tmp):
-        for j in range(1, self.num_of_cells_y+1):
-            for i in range(1, self.num_of_cells_x+1):
-                counter = 0
-                if self.table[i+1][j+1] == 1:
-                    counter += 1
-                if self.table[i-1][j-1] == 1:
-                    counter += 1
-                if self.table[i][j-1] == 1:
-                    counter += 1
-                if self.table[i-1][j] == 1:
-                    counter += 1
-                if self.table[i][j+1] == 1:
-                    counter += 1
-                if self.table[i+1][j] == 1:
-                    counter += 1
-                if self.table[i-1][j+1] == 1:
-                    counter += 1
-                if self.table[i+1][j-1] == 1:
-                    counter += 1
-
-                if self.table[i][j] == 1:
-                    if counter < 2 or counter > 3:
-                        tmp[i][j] = 0
-                else:
-                    if counter == 3:
-                        tmp[i][j] = 1
-        return tmp
-
     def paint_update(self):
-        tmp = self._copy_matrix(self.table)
-
-        tmp = self.life_rules(tmp)
-
-        self.table = tmp
-
+        self.cellular_automaton.update_table()
         self.repaint()
 
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    life = Cell()
+    life = CellularAutomatonQt()
     life.show()
     sys.exit(app.exec_())
