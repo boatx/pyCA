@@ -1,13 +1,12 @@
+#-*- coding: utf-8 -*-
+from __future__ import unicode_literals
 import sys
+
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
-NUM_OF_CELLS_X = 36
-NUM_OF_CELLS_Y = 36
-CELL_SIZE = 10
-
-WINDOW_X_SIZE = 450
-WINDOW_Y_SIZE = 480
+from config import NUM_OF_CELLS_X, NUM_OF_CELLS_Y, CELL_SIZE, \
+    MARGIN, WINDOW_Y_SIZE, WINDOW_X_SIZE
 
 
 class Cell(QWidget):
@@ -27,11 +26,13 @@ class Cell(QWidget):
         self.speed = 1000
         #2 rows invisible
         self.num_of_cells_x = NUM_OF_CELLS_X
+        self.total_num_of_cells_x = NUM_OF_CELLS_X+2
         #2 rows invisible
         self.num_of_cells_y = NUM_OF_CELLS_Y
+        self.total_num_of_cells_y = NUM_OF_CELLS_Y+2
         self.cell_size = CELL_SIZE
-        self.table = self._gen_matrix(self.num_of_cells_x,
-                                      self.num_of_cells_y)
+        self.table = self._gen_matrix(self.total_num_of_cells_x,
+                                      self.total_num_of_cells_y)
         self.run = False
         self.setWindowTitle('Automat komorkowy')
         self.setToolTip('Zaznacz komorki')
@@ -81,28 +82,27 @@ class Cell(QWidget):
             self.timer.stop()
 
     def clean(self):
-        self.table = self._gen_matrix(self.num_of_cells_x,
-                                      self.num_of_cells_y)
+        self.table = self._gen_matrix(self.total_num_of_cells_x,
+                                      self.total_num_of_cells_y)
         self.repaint()
 
     def mousePressEvent(self, event):
-
-        x = (event.x()-50)/10
-        y = (event.y()-50)/10
-
-        if 1 <= x <= 34 and 1 <= y <= 34:
-            if self.table[y][x] == 1:
-                self.table[y][x] = 0
-            else:
-                self.table[y][x] = 1
-            self.repaint()
+        x, y = self._convert_cordinates(event.x(), event.y())
+        self._update_cell(x, y)
 
     def mouseMoveEvent(self, event):
+        x, y = self._convert_cordinates(event.x(), event.y())
+        self._update_cell(x, y)
 
-        x = (event.x()-50)/10
-        y = (event.y()-50)/10
+    def _convert_cordinates(self, x, y):
+        x = (x - MARGIN)/self.cell_size
+        y = (y - MARGIN)/self.cell_size
+        return x, y
 
-        if 1 <= x <= 34 and 1 <= y <= 34:
+    def _update_cell(self, x, y):
+        if 0 <= x < self.num_of_cells_x and 0 <= y < self.num_of_cells_y:
+            x += 1
+            y += 1
             if self.table[y][x] == 1:
                 self.table[y][x] = 0
             else:
@@ -114,26 +114,34 @@ class Cell(QWidget):
         painter.begin(self)
         painter.fillRect(event.rect(), QBrush(Qt.white))
         painter.setRenderHint(QPainter.Antialiasing)
-        for i in range(self.num_of_cells_x):
-            a = i*self.cell_size+50
-            for j in range(self.num_of_cells_y):
-                b = j*self.cell_size+50
+        for i in range(1, self.num_of_cells_x+1):
+            a = (i-1)*self.cell_size+MARGIN
+            for j in range(1, self.num_of_cells_y+1):
+                b = (j-1)*self.cell_size+MARGIN
                 if self.table[j][i] == 1:
                     painter.fillRect(a, b, self.cell_size, self.cell_size, QBrush(Qt.blue))
 
         #rysowanie siatki linii
-        painter.setPen(QPen(QBrush(Qt.gray), 1, Qt.SolidLine))
-        for i in range(60, 410, 10):
-            painter.drawLine(60, i, 400, i)
-        for i in range(60, 410, 10):
-            painter.drawLine(i, 60, i, 400)
+        self._draw_line(painter)
         painter.end()
 
-    def paint_update(self):
-        tmp = self._copy_matrix(self.table)
+    def _draw_line(self, painter, line_width=1, line_color=Qt.gray, line_style=Qt.SolidLine):
+        #rysowanie siatki linii
+        painter.setPen(QPen(QBrush(Qt.gray), 1, Qt.SolidLine))
 
-        for j in range(1, 35):
-            for i in range(1, 35):
+        line_start = MARGIN
+        line_stop = self.num_of_cells_x*self.cell_size+line_start
+        for i in range(line_start, line_stop+self.cell_size, self.cell_size):
+            painter.drawLine(line_start, i, line_stop, i)
+
+        line_start = MARGIN
+        line_stop = self.num_of_cells_y*self.cell_size+line_start
+        for i in range(line_start, line_stop+self.cell_size, self.cell_size):
+            painter.drawLine(i, line_start, i, line_stop)
+
+    def life_rules(self, tmp):
+        for j in range(1, self.num_of_cells_y+1):
+            for i in range(1, self.num_of_cells_x+1):
                 counter = 0
                 if self.table[i+1][j+1] == 1:
                     counter += 1
@@ -158,6 +166,12 @@ class Cell(QWidget):
                 else:
                     if counter == 3:
                         tmp[i][j] = 1
+        return tmp
+
+    def paint_update(self):
+        tmp = self._copy_matrix(self.table)
+
+        tmp = self.life_rules(tmp)
 
         self.table = tmp
 

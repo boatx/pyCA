@@ -27,22 +27,22 @@ class Cell(QWidget):
         self.connect(self.stbn, SIGNAL("clicked()"),self.start)
         self.connect(self.clbn, SIGNAL("clicked()"),self.clean)
         self.connect(self.slider, SIGNAL('valueChanged(int)'),self.setValue)
-        buttonLayout=QHBoxLayout()
+        buttonLayout = QHBoxLayout()
         buttonLayout.addWidget(self.stbn)
         buttonLayout.addWidget(self.clbn)
         layout = QVBoxLayout()
         layout.setAlignment(Qt.AlignBottom)
-        layout.addLayout(buttonLayout,Qt.AlignCenter)
-        layout.addWidget(self.slider,Qt.AlignCenter)
+        layout.addLayout(buttonLayout, Qt.AlignCenter)
+        layout.addWidget(self.slider, Qt.AlignCenter)
         self.setLayout(layout)
-        self.resize(450,480)
+        self.resize(450, 480)
 
     def border(self):
-        for i in (0,35):
+        for i in (0, 35):
             for j in range(36):
-                self.table[j][i]=2
-        for i in range(1,35):
-            self.table[35][i]=2
+                self.table[j][i] = 2
+        for i in range(1, 35):
+            self.table[35][i] = 2
 
     def setValue(self):
         self.speed = self.slider.value()
@@ -65,47 +65,47 @@ class Cell(QWidget):
     def clean(self):
         for i in range(36):
             for j in range(36):
-                self.table[i][j]=0
+                self.table[i][j] = 0
         self.border()
         self.repaint()
 
     def mousePressEvent(self, event):
-        x=(event.x()-50)/10
-        y=(event.y()-50)/10
+        x = (event.x()-50)/10
+        y = (event.y()-50)/10
         button = event.button()
         if (x<=34 and x>=1) and (y<=34 and y>=1):
             if button == 1:
-                if self.table[y][x]==1:
-                    self.table[y][x]=0
+                if self.table[y][x] == 1:
+                    self.table[y][x] = 0
                 else:
-                    self.table[y][x]=1
+                    self.table[y][x] = 1
 
             elif button == 2:
-                if self.table[y][x]==2:
-                    self.table[y][x]=0
+                if self.table[y][x] == 2:
+                    self.table[y][x] = 0
                 else:
-                    self.table[y][x]=2
+                    self.table[y][x] = 2
 
             self.repaint()
         else:
             pass
 
     def mouseMoveEvent(self, event):
-        x=(event.x()-50)/10
-        y=(event.y()-50)/10
+        x = (event.x()-50)/10
+        y = (event.y()-50)/10
         button = event.button()
-        if (x<=34 and x>=1) and (y<=34 and y>=1):
+        if (x <= 34 and x >=1) and (y<=34 and y>=1):
             if button == 1:
-                if self.table[y][x]==1:
-                    self.table[y][x]=0
+                if self.table[y][x] == 1:
+                    self.table[y][x] = 0
                 else:
-                    self.table[y][x]=1
+                    self.table[y][x] = 1
 
             elif button == 2:
-                if self.table[y][x]==2:
-                    self.table[y][x]=0
+                if self.table[y][x] == 2:
+                    self.table[y][x] = 0
                 else:
-                    self.table[y][x]=2
+                    self.table[y][x] = 2
 
             self.repaint()
         else:
@@ -118,23 +118,23 @@ class Cell(QWidget):
         painter.setRenderHint(QPainter.Antialiasing)
         painter.setPen(QPen(QBrush(Qt.gray), 1, Qt.SolidLine))
         for i in range(36):
-            a=i*10+50
+            a = i*10+50
             for j in range(36):
-                b=j*10+50
+                b = j*10+50
                 if self.table[j][i]==1:
                     painter.fillRect(a,b,10,10,QBrush(Qt.blue))
                 elif self.table[j][i]==2:
                     painter.fillRect(a,b,10,10,QBrush(Qt.black))
                 #rysowanie siatki linii
-        for i in range(60,410,10):
-            painter.drawLine(60,i,400,i)
-        for i in range(60,410,10):
-            painter.drawLine(i,60,i,400)
+        for i in range(60, 410, 10):
+            painter.drawLine(60, i, 400, i)
+        for i in range(60, 410, 10):
+            painter.drawLine(i, 60, i, 400)
         painter.end()
 
     def sand(self):
-        for l in range(34,-1,-1):
-            for k in range(34,-1,-1):
+        for l in range(34, -1, -1):
+            for k in range(34, -1, -1):
                 if self.table[l][k] == 1:
                     if self.table[l+1][k] == 0:
                         self.table[l][k] = 0
