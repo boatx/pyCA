@@ -1,5 +1,6 @@
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+import random
 
 
 class CellularAutomatonBaseClass(object):
@@ -33,6 +34,13 @@ class CellularAutomatonBaseClass(object):
         self.table = self._gen_matrix(self.total_size_x, self.total_size_y)
 
     @staticmethod
+    def _gen_random_matrix(x, y, values):
+        random.seed()
+        end = len(values) - 1
+        return [[values[random.randint(0, end)] for _ in range(x)]
+                for _ in range(y)]
+
+    @staticmethod
     def _gen_matrix(x, y, value=0):
         return [[value for _ in range(x)]
                 for _ in range(y)]
@@ -51,33 +59,38 @@ class ConwayLifeOutflow(CellularAutomatonBaseClass):
         states = {self.DEAD_CELL: 0, self.LIVE_CELL: 1}
         states_colors = {self.DEAD_CELL: 'white', self.LIVE_CELL: 'blue'}
         super(ConwayLifeOutflow, self).__init__(num_of_cells_x, num_of_cells_y,
-                                                num_of_cells_x+2, num_of_cells_y+2, states,
-                                                states_colors=states_colors, start_x=1, start_y=1)
-        self.table = self._gen_matrix(self.total_size_x, self.total_size_y, self.states[self.DEAD_CELL])
+                                                num_of_cells_x+2,
+                                                num_of_cells_y+2,
+                                                states,
+                                                states_colors=states_colors,
+                                                start_x=1, start_y=1)
+
+        self.table = self._gen_random_matrix(self.total_size_x,
+                                             self.total_size_y,
+                                             self.states.values())
+
+    def _neumann_neighborhood_counter(self, i, j, r=1):
+        pass
+
+    def _moore_neighborhood_counter(self, i, j):
+        counter = 0
+        for k in range(i-1, i+2):
+            for l in range(j-1, j+2):
+                if self.table[k][l]:
+                    counter += 1
+
+        if self.table[i][j]:
+            counter -= 1
+
+        return counter
 
     def update_table(self):
         tmp = self._copy_matrix(self.table)
         for j in range(1, self.size_y+1):
             for i in range(1, self.size_x+1):
-                counter = 0
-                if self.table[i+1][j+1] == 1:
-                    counter += 1
-                if self.table[i-1][j-1] == 1:
-                    counter += 1
-                if self.table[i][j-1] == 1:
-                    counter += 1
-                if self.table[i-1][j] == 1:
-                    counter += 1
-                if self.table[i][j+1] == 1:
-                    counter += 1
-                if self.table[i+1][j] == 1:
-                    counter += 1
-                if self.table[i-1][j+1] == 1:
-                    counter += 1
-                if self.table[i+1][j-1] == 1:
-                    counter += 1
+                counter = self._moore_neighborhood_counter(i, j)
 
-                if self.table[i][j] == 1:
+                if self.table[i][j]:
                     if counter < 2 or counter > 3:
                         tmp[i][j] = 0
                 else:
@@ -103,3 +116,7 @@ class ConwayLifeOutflow(CellularAutomatonBaseClass):
             self.table[y][x] = self.states[self.DEAD_CELL]
         else:
             self.table[y][x] = self.states[self.LIVE_CELL]
+
+
+class Ant(CellularAutomatonBaseClass):
+    pass

@@ -1,4 +1,4 @@
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 import sys
 
@@ -19,7 +19,8 @@ class CellularAutomatonQt(QWidget):
         self.num_of_cells_x = NUM_OF_CELLS_X
         self.num_of_cells_y = NUM_OF_CELLS_Y
         self.cell_size = CELL_SIZE
-        self.cellular_automaton = ConwayLifeOutflow(self.num_of_cells_x, self.num_of_cells_y)
+        self.cellular_automaton = ConwayLifeOutflow(self.num_of_cells_x,
+                                                    self.num_of_cells_y)
 
         self.run = False
         self.setWindowTitle('Automat komorkowy')
@@ -49,6 +50,8 @@ class CellularAutomatonQt(QWidget):
 
         self.window_x_size = WINDOW_X_SIZE
         self.window_y_size = WINDOW_Y_SIZE
+        self.margin_left = MARGIN
+        self.margin_top = MARGIN
         self.resize(self.window_x_size, self.window_y_size)
 
     def set_value(self):
@@ -83,8 +86,8 @@ class CellularAutomatonQt(QWidget):
         self._update_cell(x, y)
 
     def _convert_coordinates(self, x, y):
-        x = (x - MARGIN)/self.cell_size
-        y = (y - MARGIN)/self.cell_size
+        x = int((x - self.margin_left)/self.cell_size)
+        y = int((y - self.margin_top)/self.cell_size)
         return x, y
 
     def _update_cell(self, x, y):
@@ -98,29 +101,31 @@ class CellularAutomatonQt(QWidget):
         painter.fillRect(event.rect(), QBrush(Qt.white))
         painter.setRenderHint(QPainter.Antialiasing)
         for i in range(self.num_of_cells_x):
-            a = i*self.cell_size+MARGIN
+            a = i*self.cell_size+self.margin_left
 
             for j in range(self.num_of_cells_y):
-                b = j*self.cell_size+MARGIN
+                b = j*self.cell_size+self.margin_top
 
                 to_paint, color = self.cellular_automaton.check_cell(j, i)
 
                 if to_paint:
-                    painter.fillRect(a, b, self.cell_size, self.cell_size, QBrush(QColor(color)))
+                    painter.fillRect(a, b, self.cell_size, self.cell_size,
+                                     QBrush(QColor(color)))
 
         self._draw_line(painter)
         painter.end()
 
-    def _draw_line(self, painter, line_width=1, line_color=Qt.gray, line_style=Qt.SolidLine):
-        #rysowanie siatki
+    def _draw_line(self, painter, line_width=1, line_color=Qt.gray,
+                   line_style=Qt.SolidLine):
+        # rysowanie siatki
         painter.setPen(QPen(QBrush(Qt.gray), 1, Qt.SolidLine))
 
-        line_start = MARGIN
+        line_start = self.margin_left
         line_stop = self.num_of_cells_x*self.cell_size+line_start
         for i in range(line_start, line_stop+self.cell_size, self.cell_size):
             painter.drawLine(line_start, i, line_stop, i)
 
-        line_start = MARGIN
+        line_start = self.margin_top
         line_stop = self.num_of_cells_y*self.cell_size+line_start
         for i in range(line_start, line_stop+self.cell_size, self.cell_size):
             painter.drawLine(i, line_start, i, line_stop)
