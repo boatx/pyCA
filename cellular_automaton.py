@@ -33,6 +33,12 @@ class CellularAutomatonBaseClass(object):
     def clean(self):
         self.table = self._gen_matrix(self.total_size_x, self.total_size_y)
 
+    def von_neumann_neighborhood(self, i, j, r=1):
+        raise NotImplementedError
+
+    def moore_neighborhood(self, i, j):
+        return [row[j-1:j+2] for row in self.table[i-1:i+2]]
+
     @staticmethod
     def _gen_random_matrix(x, y, values):
         random.seed()
@@ -74,9 +80,9 @@ class ConwayLifeOutflow(CellularAutomatonBaseClass):
 
     def _moore_neighborhood_counter(self, i, j):
         counter = 0
-        for k in range(i-1, i+2):
-            for l in range(j-1, j+2):
-                if self.table[k][l]:
+        for row in self.moore_neighborhood(i, j):
+            for x in row:
+                if x:
                     counter += 1
 
         if self.table[i][j]:
