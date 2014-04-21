@@ -5,22 +5,21 @@ import sys
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
-from cellular_automaton import ConwayLifeOutflow
+from cellular_automaton import ConwayLifeOutflow, Sand
 from config import NUM_OF_CELLS_X, NUM_OF_CELLS_Y, CELL_SIZE, \
     MARGIN, WINDOW_Y_SIZE, WINDOW_X_SIZE
 
 
 class CellularAutomatonQt(QWidget):
 
-    def __init__(self):
+    def __init__(self, cellular_automaton):
         QWidget.__init__(self)
 
         self.speed = 1000
-        self.num_of_cells_x = NUM_OF_CELLS_X
-        self.num_of_cells_y = NUM_OF_CELLS_Y
+        self.cellular_automaton = cellular_automaton
+        self.num_of_cells_x = self.cellular_automaton.size_x
+        self.num_of_cells_y = self.cellular_automaton.size_y
         self.cell_size = CELL_SIZE
-        self.cellular_automaton = ConwayLifeOutflow(self.num_of_cells_x,
-                                                    self.num_of_cells_y)
 
         self.run = False
         self.setWindowTitle('Automat komorkowy')
@@ -137,6 +136,20 @@ class CellularAutomatonQt(QWidget):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    life = CellularAutomatonQt()
-    life.show()
+
+    choose = 'life'
+
+    if len(sys.argv) >= 2:
+        choose = sys.argv[1]
+
+    if choose == 'life':
+        automat = ConwayLifeOutflow(NUM_OF_CELLS_X, NUM_OF_CELLS_Y)
+    elif choose == 'sand':
+        automat = Sand(NUM_OF_CELLS_X, NUM_OF_CELLS_Y)
+    else:
+        print 'Invalid automat name: {}'.format(choose)
+        sys.exit(1)
+
+    automat_qt = CellularAutomatonQt(automat)
+    automat_qt.show()
     sys.exit(app.exec_())

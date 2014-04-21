@@ -178,9 +178,72 @@ class ConwayLifeOutflow(CellularAutomatonBaseClass):
             self.table[y][x] = self.states[self.LIVE_CELL]
 
 
-class Ant(CellularAutomatonBaseClass):
-    pass
-
-
 class Sand(CellularAutomatonBaseClass):
+
+    SAND = 'Sand'
+    SOLID = 'Solid'
+    EMPTY = 'Empty'
+
+    def __init__(self, num_of_cells_x, num_of_cells_y):
+        states = {self.EMPTY: 0, self.SAND: 1, self.SOLID: 2}
+
+        states_colors = {self.EMPTY: 'white',
+                         self.SAND: 'blue',
+                         self.SOLID: 'black'}
+
+        super(Sand, self).__init__(num_of_cells_x, num_of_cells_y,
+                                   num_of_cells_x+2,
+                                   num_of_cells_y+2,
+                                   states,
+                                   states_colors=states_colors,
+                                   start_x=1, start_y=1)
+
+        self.table = self._gen_matrix(self.total_size_x,
+                                      self.total_size_y,
+                                      0)
+        self._add_borders()
+
+    def _add_borders(self):
+        """
+        Add 'Solid' border to cell table
+        """
+        for i in range(self.total_size_x):
+            self.table[0][i] = 2
+            self.table[-1][i] = 2
+
+        for i in range(self.total_size_y):
+            self.table[i][0] = 2
+            self.table[i][-1] = 2
+
+    def update_table(self):
+        for x in range(self.size_x, -1, -1):
+            for y in range(self.size_y, -1, -1):
+                if self.table[x][y] == 1:
+                    if self.table[x+1][y] == 0:
+                        self.table[x][y] = 0
+                        self.table[x+1][y] = 1
+                    elif self.table[x+1][y+1] == 0 and self.table[x][x+1] != 2:
+                        self.table[x][y] = 0
+                        self.table[x+1][y+1] = 1
+                    elif self.table[x+1][y-1] == 0 and self.table[x][y-1] == 0:
+                        self.table[x][y] = 0
+                        self.table[x+1][y-1] = 1
+
+    def check_cell(self, x, y):
+        if self.table[x][y] == self.states[self.SAND]:
+            return True, self.states_colors[self.SAND]
+        elif self.table[x][y] == self.states[self.SOLID]:
+            return True, self.states_colors[self.SOLID]
+        else:
+            return False, None
+
+    def update_cell(self, x, y, state=None):
+        if self.table[y][x] != self.states[self.SOLID]:
+            if self.table[y][x] == self.states[self.SAND]:
+                self.table[y][x] = self.states[self.EMPTY]
+            else:
+                self.table[y][x] = self.states[self.SAND]
+
+
+class Ant(CellularAutomatonBaseClass):
     pass
