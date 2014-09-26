@@ -2,18 +2,18 @@
 from __future__ import unicode_literals
 import sys
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt4.QtCore import SIGNAL, QTimer, Qt
+from PyQt4 import QtGui
 
 from cellular_automaton import ConwayLifeOutflow, Sand
 from config import NUM_OF_CELLS_X, NUM_OF_CELLS_Y, CELL_SIZE, \
     MARGIN, WINDOW_Y_SIZE, WINDOW_X_SIZE
 
 
-class CellularAutomatonQt(QWidget):
+class CellularAutomatonQt(QtGui.QWidget):
 
     def __init__(self, cellular_automaton):
-        QWidget.__init__(self)
+        QtGui.QWidget.__init__(self)
 
         self.speed = 1000
         self.cellular_automaton = cellular_automaton
@@ -22,26 +22,27 @@ class CellularAutomatonQt(QWidget):
         self.cell_size = CELL_SIZE
 
         self.run = False
-        self.setWindowTitle('Automat komorkowy')
-        self.setToolTip('Zaznacz komorki')
-        self.start_btn = QPushButton('Start', self)
-        self.start_btn.setToolTip('Start Symulacji')
-        self.clear_btn = QPushButton('Wyczysc', self)
-        self.clear_btn.setToolTip('Wyczysc plansze')
+        self.setWindowTitle('Cellular automaton')
+        self.setToolTip('Select cell')
+        self.start_btn = QtGui.QPushButton('Start', self)
+        self.start_btn.setToolTip('Start simulation')
+        self.clear_btn = QtGui.QPushButton('Clear', self)
+        self.clear_btn.setToolTip('Clear board')
         self.connect(self.start_btn, SIGNAL("clicked()"), self.start)
         self.connect(self.clear_btn, SIGNAL("clicked()"), self.clean)
         self.timer = QTimer(self)
         self.connect(self.timer, SIGNAL("timeout()"), self.paint_update)
-        self.slider = QSlider(Qt.Horizontal, self)
+        self.slider = QtGui.QSlider(Qt.Horizontal, self)
         self.slider.setMinimum(5)
         self.slider.setMaximum(1000)
-        self.slider.setToolTip('Predkosc symulacji')
+        self.slider.setToolTip('Speed of simulation')
         self.slider.setValue(500)
-        self.connect(self.slider, SIGNAL('valueChanged(int)'), self.set_value)
-        btn_layout = QHBoxLayout()
+        self.connect(self.slider, SIGNAL('valueChanged(int)'),
+                     self.set_value)
+        btn_layout = QtGui.QHBoxLayout()
         btn_layout.addWidget(self.start_btn)
         btn_layout.addWidget(self.clear_btn)
-        layout = QVBoxLayout()
+        layout = QtGui.QVBoxLayout()
         layout.setAlignment(Qt.AlignBottom)
         layout.addLayout(btn_layout, Qt.AlignCenter)
         layout.addWidget(self.slider, Qt.AlignCenter)
@@ -62,13 +63,13 @@ class CellularAutomatonQt(QWidget):
     def start(self):
         if not self.run:
             self.run = True
-            self.start_btn.setToolTip('Koniec Symulacji')
-            self.start_btn.setText('Koniec')
+            self.start_btn.setToolTip('End simulation')
+            self.start_btn.setText('End')
             self.timer.start(self.speed)
         else:
             self.run = False
             self.start_btn.setToolTip('Start')
-            self.start_btn.setText('Start Symulacji')
+            self.start_btn.setText('Start simulation')
             self.timer.stop()
 
     def clean(self):
@@ -95,10 +96,10 @@ class CellularAutomatonQt(QWidget):
             self.repaint()
 
     def paintEvent(self, event):
-        painter = QPainter()
+        painter = QtGui.QPainter()
         painter.begin(self)
-        painter.fillRect(event.rect(), QBrush(Qt.white))
-        painter.setRenderHint(QPainter.Antialiasing)
+        painter.fillRect(event.rect(), QtGui.QBrush(Qt.white))
+        painter.setRenderHint(QtGui.QPainter.Antialiasing)
         for i in range(self.num_of_cells_x):
             a = i*self.cell_size+self.margin_left
 
@@ -109,7 +110,7 @@ class CellularAutomatonQt(QWidget):
 
                 if to_paint:
                     painter.fillRect(a, b, self.cell_size, self.cell_size,
-                                     QBrush(QColor(color)))
+                                     QtGui.QBrush(QtGui.QColor(color)))
 
         self._draw_line(painter)
         painter.end()
@@ -117,7 +118,7 @@ class CellularAutomatonQt(QWidget):
     def _draw_line(self, painter, line_width=1, line_color=Qt.gray,
                    line_style=Qt.SolidLine):
         # rysowanie siatki
-        painter.setPen(QPen(QBrush(Qt.gray), 1, Qt.SolidLine))
+        painter.setPen(QtGui.QPen(QtGui.QBrush(Qt.gray), 1, Qt.SolidLine))
 
         line_start = self.margin_left
         line_stop = self.num_of_cells_x*self.cell_size+line_start
@@ -135,7 +136,7 @@ class CellularAutomatonQt(QWidget):
 
 
 if __name__ == "__main__":
-    app = QApplication(sys.argv)
+    app = QtGui.QApplication(sys.argv)
 
     choose = 'life'
 

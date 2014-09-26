@@ -245,5 +245,43 @@ class Sand(CellularAutomatonBaseClass):
                 self.table[y][x] = self.states[self.SAND]
 
 
-class Ant(CellularAutomatonBaseClass):
-    pass
+class Langtons_Ant(CellularAutomatonBaseClass):
+    BLACK_CELL = 'Black_Cell'
+    WHITE_CELL = 'White_Cell'
+    ANT = 'Ant'
+
+    def __init__(self, num_of_cells_x, num_of_cells_y):
+        states = {self.WHITE_CELL: 0,
+                  self.BLACK_CELL: 1,
+                  self.ANT: 2}
+
+        states_colors = {self.WHITE_CELL: 'white',
+                         self.BLACK_CELL: 'black',
+                         self.ANT: 'red'}
+
+        super(Langtons_Ant, self).__init__(num_of_cells_x, num_of_cells_y,
+                                  num_of_cells_x,
+                                  num_of_cells_y,
+                                  states,
+                                  states_colors=states_colors,
+                                  start_x=0, start_y=0)
+
+        self.table = self._gen_matrix(self.total_size_x,
+                                      self.total_size_y,
+                                      0)
+        self._add_borders()
+
+    def check_cell(self, x, y):
+        if self.table[x][y] != self.states[self.WHITE_CELL]:
+            return True, self.states_colors[self.table[x][y]]
+        else:
+            return False, None
+
+    def update_cell(self, x, y):
+        if self.table[x][y] != self.states[self.ANT]:
+            self.table[x][y] = self.states[self.ANT]
+        else:
+            self.table[x][y] = self.states[self.WHITE_CELL]
+
+    def update_table(self):
+        pass
