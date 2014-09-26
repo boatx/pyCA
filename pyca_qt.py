@@ -7,7 +7,8 @@ from PyQt4 import QtGui
 
 from cellular_automaton import ConwayLifeOutflow, Sand
 from config import NUM_OF_CELLS_X, NUM_OF_CELLS_Y, CELL_SIZE, \
-    MARGIN, WINDOW_Y_SIZE, WINDOW_X_SIZE
+    MARGIN, WINDOW_Y_SIZE, WINDOW_X_SIZE, MIN_SIMULATION_SPEED, \
+    MAX_SIMULATION_SPEED, DEFAULT_SIMULATION_SPEED
 
 
 class CellularAutomatonQt(QtGui.QWidget):
@@ -33,10 +34,10 @@ class CellularAutomatonQt(QtGui.QWidget):
         self.timer = QTimer(self)
         self.connect(self.timer, SIGNAL("timeout()"), self.paint_update)
         self.slider = QtGui.QSlider(Qt.Horizontal, self)
-        self.slider.setMinimum(5)
-        self.slider.setMaximum(1000)
+        self.slider.setMinimum(MIN_SIMULATION_SPEED)
+        self.slider.setMaximum(MAX_SIMULATION_SPEED)
+        self.slider.setValue(DEFAULT_SIMULATION_SPEED)
         self.slider.setToolTip('Speed of simulation')
-        self.slider.setValue(500)
         self.connect(self.slider, SIGNAL('valueChanged(int)'),
                      self.set_value)
         btn_layout = QtGui.QHBoxLayout()
@@ -118,7 +119,7 @@ class CellularAutomatonQt(QtGui.QWidget):
     def _draw_line(self, painter, line_width=1, line_color=Qt.gray,
                    line_style=Qt.SolidLine):
         # rysowanie siatki
-        painter.setPen(QtGui.QPen(QtGui.QBrush(Qt.gray), 1, Qt.SolidLine))
+        painter.setPen(QtGui.QPen(QtGui.QBrush(line_color), 1, line_style))
 
         line_start = self.margin_left
         line_stop = self.num_of_cells_x*self.cell_size+line_start
