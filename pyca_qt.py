@@ -16,7 +16,7 @@ class CellularAutomatonQt(QtGui.QWidget):
     def __init__(self, cellular_automaton):
         QtGui.QWidget.__init__(self)
 
-        self.speed = 1000
+        self.speed = DEFAULT_SIMULATION_SPEED
         self.cellular_automaton = cellular_automaton
         self.num_of_cells_x = self.cellular_automaton.size_x
         self.num_of_cells_y = self.cellular_automaton.size_y
@@ -49,11 +49,21 @@ class CellularAutomatonQt(QtGui.QWidget):
         layout.addWidget(self.slider, Qt.AlignCenter)
         self.setLayout(layout)
 
-        self.window_x_size = WINDOW_X_SIZE
-        self.window_y_size = WINDOW_Y_SIZE
         self.margin_left = MARGIN
         self.margin_top = MARGIN
-        self.resize(self.window_x_size, self.window_y_size)
+        self.resize(WINDOW_X_SIZE, WINDOW_Y_SIZE)
+        self.setMinimumSize(WINDOW_X_SIZE, WINDOW_Y_SIZE)
+        self.resizeEvent = self.on_resize
+
+    def on_resize(self, event):
+        width, height = self.width(), self.height()
+        new_x_cell_size = (width - MARGIN*2) / self.num_of_cells_x
+        new_y_cell_size = (height - MARGIN*2) / self.num_of_cells_y
+        self.cell_size = min(new_x_cell_size, new_y_cell_size)
+        self.margin_left = (width - self.cell_size*self.num_of_cells_x) / 2
+        self.margin_top = (height - self.cell_size*self.num_of_cells_y) / 2
+        self.repaint()
+
 
     def set_value(self):
         self.speed = self.slider.value()
@@ -87,8 +97,8 @@ class CellularAutomatonQt(QtGui.QWidget):
         self._update_cell(x, y)
 
     def _convert_coordinates(self, x, y):
-        x = int((x - self.margin_left)/self.cell_size)
-        y = int((y - self.margin_top)/self.cell_size)
+        x = (x - self.margin_left) / self.cell_size
+        y = (y - self.margin_top) / self.cell_size
         return x, y
 
     def _update_cell(self, x, y):
@@ -102,10 +112,10 @@ class CellularAutomatonQt(QtGui.QWidget):
         painter.fillRect(event.rect(), QtGui.QBrush(Qt.white))
         painter.setRenderHint(QtGui.QPainter.Antialiasing)
         for i in range(self.num_of_cells_x):
-            a = i*self.cell_size+self.margin_left
+            a = i*self.cell_size + self.margin_left
 
             for j in range(self.num_of_cells_y):
-                b = j*self.cell_size+self.margin_top
+                b = j*self.cell_size + self.margin_top
 
                 to_paint, color = self.cellular_automaton.check_cell(j, i)
 
@@ -121,15 +131,16 @@ class CellularAutomatonQt(QtGui.QWidget):
         # rysowanie siatki
         painter.setPen(QtGui.QPen(QtGui.QBrush(line_color), 1, line_style))
 
-        line_start = self.margin_left
-        line_stop = self.num_of_cells_x*self.cell_size+line_start
-        for i in range(line_start, line_stop+self.cell_size, self.cell_size):
-            painter.drawLine(line_start, i, line_stop, i)
+        line_start_x = self.margin_left
+        line_stop_x = self.num_of_cells_x*self.cell_size+line_start_x
+        line_start_y = self.margin_top
+        line_stop_y = self.num_of_cells_y*self.cell_size+line_start_y
 
-        line_start = self.margin_top
-        line_stop = self.num_of_cells_y*self.cell_size+line_start
-        for i in range(line_start, line_stop+self.cell_size, self.cell_size):
-            painter.drawLine(i, line_start, i, line_stop)
+        for i in range(line_start_y, line_stop_y+self.cell_size, self.cell_size):
+            painter.drawLine(line_start_x, i, line_stop_x, i)
+
+        for i in range(line_start_x, line_stop_x+self.cell_size, self.cell_size):
+            painter.drawLine(i, line_start_y, i, line_stop_y)
 
     def paint_update(self):
         self.cellular_automaton.update_table()
@@ -149,7 +160,7 @@ if __name__ == "__main__":
     elif choose == 'sand':
         automat = Sand(NUM_OF_CELLS_X, NUM_OF_CELLS_Y)
     else:
-        print 'Invalid automat name: {}'.format(choose)
+        print "Invalid automat name: {}".format(choose)
         sys.exit(1)
 
     automat_qt = CellularAutomatonQt(automat)
