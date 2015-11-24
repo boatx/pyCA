@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 import sys
+from itertools import product
+from functools import partial
 
 from PyQt4.QtCore import SIGNAL, QTimer, Qt
 from PyQt4 import QtGui
@@ -17,10 +19,10 @@ class CellularAutomatonQt(QtGui.QWidget):
         QtGui.QWidget.__init__(self)
 
         self.speed = DEFAULT_SIMULATION_SPEED
+        self.cell_size = CELL_SIZE
         self.cellular_automaton = cellular_automaton
         self.num_of_cells_x = self.cellular_automaton.size_x
         self.num_of_cells_y = self.cellular_automaton.size_y
-        self.cell_size = CELL_SIZE
 
         self.run = False
         self.setWindowTitle('Cellular automaton')
@@ -49,13 +51,40 @@ class CellularAutomatonQt(QtGui.QWidget):
         layout.addWidget(self.slider, Qt.AlignCenter)
         self.setLayout(layout)
 
+        self.menu_bar = QtGui.QMenuBar(self)
+        self.add_menu_bar()
+
         self.margin_left = MARGIN
         self.margin_top = MARGIN
         self.resize(WINDOW_X_SIZE, WINDOW_Y_SIZE)
         self.setMinimumSize(WINDOW_X_SIZE, WINDOW_Y_SIZE)
         self.resizeEvent = self.on_resize
 
+    def add_menu_bar(self):
+        exit_menu = self.menu_bar.addMenu('File')
+        exit_action = QtGui.QAction('Exit', self)
+        exit_action.triggered.connect(QtGui.qApp.quit)
+        exit_menu.addAction(exit_action)
+
+        conway_action = QtGui.QAction('Conway Life Game', self)
+        cf = partial(self.set_automaton,
+                     ConwayLifeOutflow(NUM_OF_CELLS_X, NUM_OF_CELLS_Y))
+        conway_action.triggered.connect(cf)
+        exit_menu.addAction(conway_action)
+
+        sand_action = QtGui.QAction('Sand', self)
+        sf = partial(self.set_automaton,Sand(NUM_OF_CELLS_X, NUM_OF_CELLS_Y))
+        sand_action.triggered.connect(sf)
+        exit_menu.addAction(sand_action)
+
+    def set_automaton(self, cellular_automaton):
+        self.cellular_automaton = cellular_automaton
+        self.num_of_cells_x = self.cellular_automaton.size_x
+        self.num_of_cells_y = self.cellular_automaton.size_y
+        self.repaint()
+
     def on_resize(self, event):
+        """Resize grid"""
         width, height = self.width(), self.height()
         new_x_cell_size = (width - MARGIN*2) / self.num_of_cells_x
         new_y_cell_size = (height - MARGIN*2) / self.num_of_cells_y
@@ -66,12 +95,14 @@ class CellularAutomatonQt(QtGui.QWidget):
 
 
     def set_value(self):
+        """Set slider value"""
         self.speed = self.slider.value()
         if self.run:
             self.timer.stop()
             self.timer.start(self.speed)
 
     def start(self):
+        """Start simulation"""
         if not self.run:
             self.run = True
             self.start_btn.setToolTip('End simulation')
@@ -111,17 +142,20 @@ class CellularAutomatonQt(QtGui.QWidget):
         painter.begin(self)
         painter.fillRect(event.rect(), QtGui.QBrush(Qt.white))
         painter.setRenderHint(QtGui.QPainter.Antialiasing)
-        for i in range(self.num_of_cells_x):
-            a = i*self.cell_size + self.margin_left
 
-            for j in range(self.num_of_cells_y):
-                b = j*self.cell_size + self.margin_top
+        for i, j in product(xrange(self.num_of_cells_x),
+                            xrange(self.num_of_cells_y)):
 
-                to_paint, color = self.cellular_automaton.check_cell(j, i)
+            i_paint_cord = i*self.cell_size + self.margin_left
 
-                if to_paint:
-                    painter.fillRect(a, b, self.cell_size, self.cell_size,
-                                     QtGui.QBrush(QtGui.QColor(color)))
+            j_paint_cord = j*self.cell_size + self.margin_top
+
+            to_paint, color = self.cellular_automaton.check_cell(j, i)
+
+            if to_paint:
+                painter.fillRect(i_paint_cord, j_paint_cord, self.cell_size,
+                                 self.cell_size,
+                                 QtGui.QBrush(QtGui.QColor(color)))
 
         self._draw_line(painter)
         painter.end()

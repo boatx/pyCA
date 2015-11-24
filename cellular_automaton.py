@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 import random
+from itertools import product
 
 
 class CellularAutomatonBaseClass(object):
@@ -125,7 +126,7 @@ class ConwayLifeOutflow(CellularAutomatonBaseClass):
                                              self.states.values())
 
     def _neumann_neighborhood_counter(self, x, y, r=1):
-        pass
+        raise NotImplementedError
 
     def _moore_neighborhood_counter(self, x, y):
         """
@@ -146,16 +147,18 @@ class ConwayLifeOutflow(CellularAutomatonBaseClass):
 
     def update_table(self):
         tmp = self._copy_matrix(self.table)
-        for j in range(1, self.size_y+1):
-            for i in range(1, self.size_x+1):
-                counter = self._moore_neighborhood_counter(i, j)
+        for i, j in product(xrange(1, self.size_y+1),
+                            xrange(1, self.size_x+1)):
 
-                if self.table[i][j]:
-                    if counter < 2 or counter > 3:
-                        tmp[i][j] = 0
-                else:
-                    if counter == 3:
-                        tmp[i][j] = 1
+            counter = self._moore_neighborhood_counter(i, j)
+
+            if self.table[i][j]:
+                if counter < 2 or counter > 3:
+                    tmp[i][j] = 0
+            else:
+                if counter == 3:
+                    tmp[i][j] = 1
+
         self.table = tmp
         return tmp
 
@@ -184,7 +187,7 @@ class Sand(CellularAutomatonBaseClass):
     SOLID = 'Solid'
     EMPTY = 'Empty'
 
-    def __init__(self, num_of_cells_x, num_of_cells_y):
+    def __init__(self, num_of_cells_x, num_of_cells_y, outflow=True):
         states = {self.EMPTY: 0, self.SAND: 1, self.SOLID: 2}
 
         states_colors = {self.EMPTY: 'white',
@@ -201,6 +204,7 @@ class Sand(CellularAutomatonBaseClass):
         self.table = self._gen_matrix(self.total_size_x,
                                       self.total_size_y,
                                       0)
+        self.outflow = outflow
         self._add_borders()
 
     def _add_borders(self):
@@ -209,25 +213,33 @@ class Sand(CellularAutomatonBaseClass):
         """
         for i in range(self.total_size_x):
             self.table[0][i] = 2
-            self.table[-1][i] = 2
+            self.table[-3][i] = 2
 
         for i in range(self.total_size_y):
             self.table[i][0] = 2
-            self.table[i][-1] = 2
+            self.table[i][-3] = 2
 
     def update_table(self):
-        for x in range(self.size_x, -1, -1):
-            for y in range(self.size_y, -1, -1):
-                if self.table[x][y] == 1:
-                    if self.table[x+1][y] == 0:
-                        self.table[x][y] = 0
-                        self.table[x+1][y] = 1
-                    elif self.table[x+1][y+1] == 0 and self.table[x][x+1] != 2:
-                        self.table[x][y] = 0
-                        self.table[x+1][y+1] = 1
-                    elif self.table[x+1][y-1] == 0 and self.table[x][y-1] == 0:
-                        self.table[x][y] = 0
-                        self.table[x+1][y-1] = 1
+        for x, y in product(xrange(self.size_x, -1, -1),
+                            xrange(self.size_y, -1, -1)):
+            if self.table[x][y] == 1:
+                out = x in (self.size_y, 0) or y in (self.size_x, 0)
+
+                if self.outflow and out:
+                    self.table[x][y] = 0
+                else:
+                    self._move_sand(x, y)
+
+    def _move_sand(self, x, y):
+        if self.table[x+1][y] == 0:
+            self.table[x][y] = 0
+            self.table[x+1][y] = 1
+        elif self.table[x+1][y+1] == 0 and self.table[x][x+1] != 2:
+            self.table[x][y] = 0
+            self.table[x+1][y+1] = 1
+        elif self.table[x+1][y-1] == 0 and self.table[x][y-1] == 0:
+            self.table[x][y] = 0
+            self.table[x+1][y-1] = 1
 
     def check_cell(self, x, y):
         if self.table[x][y] == self.states[self.SAND]:
@@ -284,4 +296,4 @@ class Langtons_Ant(CellularAutomatonBaseClass):
             self.table[x][y] = self.states[self.WHITE_CELL]
 
     def update_table(self):
-        pass
+        raise NotImplementedError
