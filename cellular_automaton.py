@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
 import random
 from itertools import product
 
@@ -110,16 +108,13 @@ class ConwayLifeOutflow(CellularAutomatonBaseClass):
 
     DEAD_CELL = 'DeadCell'
     LIVE_CELL = 'LiveCell'
+    STATES = {DEAD_CELL: 0, LIVE_CELL: 1}
+    STATES_COLORS = {DEAD_CELL: 'white', LIVE_CELL: 'blue'}
 
     def __init__(self, num_of_cells_x, num_of_cells_y):
-        states = {self.DEAD_CELL: 0, self.LIVE_CELL: 1}
-        states_colors = {self.DEAD_CELL: 'white', self.LIVE_CELL: 'blue'}
-        super(ConwayLifeOutflow, self).__init__(num_of_cells_x, num_of_cells_y,
-                                                num_of_cells_x+2,
-                                                num_of_cells_y+2,
-                                                states,
-                                                states_colors=states_colors,
-                                                start_x=1, start_y=1)
+        super().__init__(
+            num_of_cells_x, num_of_cells_y, num_of_cells_x+2, num_of_cells_y+2,
+            self.STATES, states_colors=self.STATES_COLORS, start_x=1, start_y=1)
 
         self.table = self._gen_random_matrix(self.total_size_x,
                                              self.total_size_y,
@@ -147,8 +142,7 @@ class ConwayLifeOutflow(CellularAutomatonBaseClass):
 
     def update_table(self):
         tmp = self._copy_matrix(self.table)
-        for i, j in product(range(1, self.size_y+1),
-                            range(1, self.size_x+1)):
+        for i, j in product(range(1, self.size_y+1), range(1, self.size_x+1)):
 
             counter = self._moore_neighborhood_counter(i, j)
 
@@ -182,28 +176,17 @@ class ConwayLifeOutflow(CellularAutomatonBaseClass):
 
 
 class Sand(CellularAutomatonBaseClass):
-
     SAND = 'Sand'
     SOLID = 'Solid'
     EMPTY = 'Empty'
+    STATES = {EMPTY: 0, SAND: 1, SOLID: 2}
+    STATES_COLORS = {EMPTY: 'white', SAND: 'blue', SOLID: 'black'}
 
     def __init__(self, num_of_cells_x, num_of_cells_y, outflow=True):
-        states = {self.EMPTY: 0, self.SAND: 1, self.SOLID: 2}
-
-        states_colors = {self.EMPTY: 'white',
-                         self.SAND: 'blue',
-                         self.SOLID: 'black'}
-
-        super(Sand, self).__init__(num_of_cells_x, num_of_cells_y,
-                                   num_of_cells_x+2,
-                                   num_of_cells_y+2,
-                                   states,
-                                   states_colors=states_colors,
-                                   start_x=1, start_y=1)
-
-        self.table = self._gen_matrix(self.total_size_x,
-                                      self.total_size_y,
-                                      0)
+        super().__init__(
+            num_of_cells_x, num_of_cells_y, num_of_cells_x+2, num_of_cells_y+2,
+            self.STATES, states_colors=self.STATES_COLORS, start_x=1, start_y=1)
+        self.table = self._gen_matrix(self.total_size_x, self.total_size_y, 0)
         self.outflow = outflow
         self._add_borders()
 
@@ -261,26 +244,14 @@ class Langtons_Ant(CellularAutomatonBaseClass):
     BLACK_CELL = 'Black_Cell'
     WHITE_CELL = 'White_Cell'
     ANT = 'Ant'
+    STATES = {WHITE_CELL: 0, BLACK_CELL: 1, ANT: 2}
+    STATES_COLORS = {WHITE_CELL: 'white', BLACK_CELL: 'black', ANT: 'red'}
 
     def __init__(self, num_of_cells_x, num_of_cells_y):
-        states = {self.WHITE_CELL: 0,
-                  self.BLACK_CELL: 1,
-                  self.ANT: 2}
-
-        states_colors = {self.WHITE_CELL: 'white',
-                         self.BLACK_CELL: 'black',
-                         self.ANT: 'red'}
-
-        super(Langtons_Ant, self).__init__(num_of_cells_x, num_of_cells_y,
-                                  num_of_cells_x,
-                                  num_of_cells_y,
-                                  states,
-                                  states_colors=states_colors,
-                                  start_x=0, start_y=0)
-
-        self.table = self._gen_matrix(self.total_size_x,
-                                      self.total_size_y,
-                                      0)
+        super().__init__(
+            num_of_cells_x, num_of_cells_y, num_of_cells_x, num_of_cells_y,
+            self.STATES, states_colors=self.STATES_COLORS, start_x=0, start_y=0)
+        self.table = self._gen_matrix(self.total_size_x, self.total_size_y, 0)
         self._add_borders()
 
     def check_cell(self, x, y):

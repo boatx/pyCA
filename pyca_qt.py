@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
 import sys
 from itertools import product
 from functools import partial
@@ -97,7 +95,6 @@ class CellularAutomatonQt(QWidget):
         self.margin_top = (height - self.cell_size*self.num_of_cells_y) / 2
         self.repaint()
 
-
     def set_value(self):
         """Set slider value"""
         self.speed = self.slider.value()
@@ -147,8 +144,7 @@ class CellularAutomatonQt(QWidget):
         painter.fillRect(event.rect(), QtGui.QBrush(Qt.white))
         painter.setRenderHint(QtGui.QPainter.Antialiasing)
 
-        for i, j in product(
-            range(self.num_of_cells_x), range(self.num_of_cells_y)):
+        for i, j in product(range(self.num_of_cells_x), range(self.num_of_cells_y)):
 
             i_paint_cord = i*self.cell_size + self.margin_left
 
