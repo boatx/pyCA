@@ -123,7 +123,7 @@ class ConwayLifeOutflow(CellularAutomatonBaseClass):
 
         self.table = self._gen_random_matrix(self.total_size_x,
                                              self.total_size_y,
-                                             self.states.values())
+                                             list(self.states.values()))
 
     def _neumann_neighborhood_counter(self, x, y, r=1):
         raise NotImplementedError
@@ -147,8 +147,8 @@ class ConwayLifeOutflow(CellularAutomatonBaseClass):
 
     def update_table(self):
         tmp = self._copy_matrix(self.table)
-        for i, j in product(xrange(1, self.size_y+1),
-                            xrange(1, self.size_x+1)):
+        for i, j in product(range(1, self.size_y+1),
+                            range(1, self.size_x+1)):
 
             counter = self._moore_neighborhood_counter(i, j)
 
@@ -220,8 +220,8 @@ class Sand(CellularAutomatonBaseClass):
             self.table[i][-3] = 2
 
     def update_table(self):
-        for x, y in product(xrange(self.size_x, -1, -1),
-                            xrange(self.size_y, -1, -1)):
+        for x, y in product(range(self.size_x, -1, -1),
+                            range(self.size_y, -1, -1)):
             if self.table[x][y] == 1:
                 out = x in (self.size_y, 0) or y in (self.size_x, 0)
 

@@ -4,8 +4,12 @@ import sys
 from itertools import product
 from functools import partial
 
-from PyQt4.QtCore import SIGNAL, QTimer, Qt
-from PyQt4 import QtGui
+from PyQt5.QtCore import QTimer, Qt
+from PyQt5.QtWidgets import (
+    QWidget, QApplication, QPushButton, QSlider, QHBoxLayout, QVBoxLayout,
+    QMenuBar, QAction
+)
+from PyQt5 import QtGui
 
 from cellular_automaton import ConwayLifeOutflow, Sand
 from config import NUM_OF_CELLS_X, NUM_OF_CELLS_Y, CELL_SIZE, \
@@ -13,10 +17,10 @@ from config import NUM_OF_CELLS_X, NUM_OF_CELLS_Y, CELL_SIZE, \
     MAX_SIMULATION_SPEED, DEFAULT_SIMULATION_SPEED
 
 
-class CellularAutomatonQt(QtGui.QWidget):
+class CellularAutomatonQt(QWidget):
 
     def __init__(self, cellular_automaton):
-        QtGui.QWidget.__init__(self)
+        super().__init__()
 
         self.speed = DEFAULT_SIMULATION_SPEED
         self.cell_size = CELL_SIZE
@@ -27,31 +31,30 @@ class CellularAutomatonQt(QtGui.QWidget):
         self.run = False
         self.setWindowTitle('Cellular automaton')
         self.setToolTip('Select cell')
-        self.start_btn = QtGui.QPushButton('Start', self)
+        self.start_btn = QPushButton('Start', self)
         self.start_btn.setToolTip('Start simulation')
-        self.clear_btn = QtGui.QPushButton('Clear', self)
+        self.clear_btn = QPushButton('Clear', self)
         self.clear_btn.setToolTip('Clear board')
-        self.connect(self.start_btn, SIGNAL("clicked()"), self.start)
-        self.connect(self.clear_btn, SIGNAL("clicked()"), self.clean)
+        self.start_btn.clicked.connect(self.start)
+        self.clear_btn.clicked.connect(self.clean)
         self.timer = QTimer(self)
-        self.connect(self.timer, SIGNAL("timeout()"), self.paint_update)
-        self.slider = QtGui.QSlider(Qt.Horizontal, self)
+        self.timer.timeout.connect(self.paint_update)
+        self.slider = QSlider(Qt.Horizontal, self)
         self.slider.setMinimum(MIN_SIMULATION_SPEED)
         self.slider.setMaximum(MAX_SIMULATION_SPEED)
         self.slider.setValue(DEFAULT_SIMULATION_SPEED)
         self.slider.setToolTip('Speed of simulation')
-        self.connect(self.slider, SIGNAL('valueChanged(int)'),
-                     self.set_value)
-        btn_layout = QtGui.QHBoxLayout()
+        self.slider.valueChanged.connect(self.set_value)
+        btn_layout = QHBoxLayout()
         btn_layout.addWidget(self.start_btn)
         btn_layout.addWidget(self.clear_btn)
-        layout = QtGui.QVBoxLayout()
+        layout = QVBoxLayout()
         layout.setAlignment(Qt.AlignBottom)
         layout.addLayout(btn_layout, Qt.AlignCenter)
         layout.addWidget(self.slider, Qt.AlignCenter)
         self.setLayout(layout)
 
-        self.menu_bar = QtGui.QMenuBar(self)
+        self.menu_bar = QMenuBar(self)
         self.add_menu_bar()
 
         self.margin_left = MARGIN
@@ -62,20 +65,21 @@ class CellularAutomatonQt(QtGui.QWidget):
 
     def add_menu_bar(self):
         exit_menu = self.menu_bar.addMenu('File')
-        exit_action = QtGui.QAction('Exit', self)
-        exit_action.triggered.connect(QtGui.qApp.quit)
-        exit_menu.addAction(exit_action)
 
-        conway_action = QtGui.QAction('Conway Life Game', self)
+        conway_action = QAction('Conway Life Game', self)
         cf = partial(self.set_automaton,
                      ConwayLifeOutflow(NUM_OF_CELLS_X, NUM_OF_CELLS_Y))
         conway_action.triggered.connect(cf)
         exit_menu.addAction(conway_action)
 
-        sand_action = QtGui.QAction('Sand', self)
-        sf = partial(self.set_automaton,Sand(NUM_OF_CELLS_X, NUM_OF_CELLS_Y))
+        sand_action = QAction('Sand', self)
+        sf = partial(self.set_automaton, Sand(NUM_OF_CELLS_X, NUM_OF_CELLS_Y))
         sand_action.triggered.connect(sf)
         exit_menu.addAction(sand_action)
+
+        exit_action = QAction('Exit', self)
+        exit_action.triggered.connect(self.close)
+        exit_menu.addAction(exit_action)
 
     def set_automaton(self, cellular_automaton):
         self.cellular_automaton = cellular_automaton
@@ -143,8 +147,8 @@ class CellularAutomatonQt(QtGui.QWidget):
         painter.fillRect(event.rect(), QtGui.QBrush(Qt.white))
         painter.setRenderHint(QtGui.QPainter.Antialiasing)
 
-        for i, j in product(xrange(self.num_of_cells_x),
-                            xrange(self.num_of_cells_y)):
+        for i, j in product(
+            range(self.num_of_cells_x), range(self.num_of_cells_y)):
 
             i_paint_cord = i*self.cell_size + self.margin_left
 
@@ -165,16 +169,16 @@ class CellularAutomatonQt(QtGui.QWidget):
         # rysowanie siatki
         painter.setPen(QtGui.QPen(QtGui.QBrush(line_color), 1, line_style))
 
-        line_start_x = self.margin_left
-        line_stop_x = self.num_of_cells_x*self.cell_size+line_start_x
-        line_start_y = self.margin_top
-        line_stop_y = self.num_of_cells_y*self.cell_size+line_start_y
+        line_start_x = int(self.margin_left)
+        line_stop_x = int(self.num_of_cells_x*self.cell_size+line_start_x)
+        line_start_y = int(self.margin_top)
+        line_stop_y = int(self.num_of_cells_y*self.cell_size+line_start_y)
 
-        for i in range(line_start_y, line_stop_y+self.cell_size, self.cell_size):
-            painter.drawLine(line_start_x, i, line_stop_x, i)
+        #for i in range(line_start_y, line_stop_y+self.cell_size, self.cell_size):
+        #    painter.drawLine(line_start_x, i, line_stop_x, i)
 
-        for i in range(line_start_x, line_stop_x+self.cell_size, self.cell_size):
-            painter.drawLine(i, line_start_y, i, line_stop_y)
+        #for i in range(line_start_x, line_stop_x+self.cell_size, self.cell_size):
+        #    painter.drawLine(i, line_start_y, i, line_stop_y)
 
     def paint_update(self):
         self.cellular_automaton.update_table()
@@ -182,7 +186,7 @@ class CellularAutomatonQt(QtGui.QWidget):
 
 
 if __name__ == "__main__":
-    app = QtGui.QApplication(sys.argv)
+    app = QApplication(sys.argv)
 
     choose = 'life'
 
@@ -194,7 +198,7 @@ if __name__ == "__main__":
     elif choose == 'sand':
         automat = Sand(NUM_OF_CELLS_X, NUM_OF_CELLS_Y)
     else:
-        print "Invalid automat name: {}".format(choose)
+        print("Invalid automat name: {}".format(choose))
         sys.exit(1)
 
     automat_qt = CellularAutomatonQt(automat)
