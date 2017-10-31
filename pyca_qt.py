@@ -162,7 +162,7 @@ class CellularAutomatonQt(QWidget):
 
     def _draw_line(self, painter, line_width=1, line_color=Qt.gray,
                    line_style=Qt.SolidLine):
-        # rysowanie siatki
+
         painter.setPen(QtGui.QPen(QtGui.QBrush(line_color), 1, line_style))
 
         line_start_x = int(self.margin_left)
@@ -181,7 +181,7 @@ class CellularAutomatonQt(QWidget):
         self.repaint()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     app = QApplication(sys.argv)
 
     choose = 'life'
@@ -194,7 +194,7 @@ if __name__ == "__main__":
     elif choose == 'sand':
         automat = Sand(NUM_OF_CELLS_X, NUM_OF_CELLS_Y)
     else:
-        print("Invalid automat name: {}".format(choose))
+        print('Invalid automat name: {}'.format(choose))
         sys.exit(1)
 
     automat_qt = CellularAutomatonQt(automat)
