@@ -88,11 +88,11 @@ class CellularAutomatonQt(QWidget):
     def on_resize(self, event):
         """Resize grid"""
         width, height = self.width(), self.height()
-        new_x_cell_size = (width - MARGIN*2) / self.num_of_cells_x
-        new_y_cell_size = (height - MARGIN*2) / self.num_of_cells_y
+        new_x_cell_size = (width - MARGIN*2) // self.num_of_cells_x
+        new_y_cell_size = (height - MARGIN*2) // self.num_of_cells_y
         self.cell_size = min(new_x_cell_size, new_y_cell_size)
-        self.margin_left = (width - self.cell_size*self.num_of_cells_x) / 2
-        self.margin_top = (height - self.cell_size*self.num_of_cells_y) / 2
+        self.margin_left = (width - self.cell_size*self.num_of_cells_x) // 2
+        self.margin_top = (height - self.cell_size*self.num_of_cells_y) // 2
         self.repaint()
 
     def set_value(self):
@@ -129,9 +129,9 @@ class CellularAutomatonQt(QWidget):
         self._update_cell(x, y)
 
     def _convert_coordinates(self, x, y):
-        x = (x - self.margin_left) / self.cell_size
-        y = (y - self.margin_top) / self.cell_size
-        return x, y
+        x = (x - self.margin_left) // self.cell_size
+        y = (y - self.margin_top) // self.cell_size
+        return int(x), int(y)
 
     def _update_cell(self, x, y):
         if 0 <= x < self.num_of_cells_x and 0 <= y < self.num_of_cells_y:
@@ -165,16 +165,16 @@ class CellularAutomatonQt(QWidget):
 
         painter.setPen(QtGui.QPen(QtGui.QBrush(line_color), 1, line_style))
 
-        line_start_x = int(self.margin_left)
-        line_stop_x = int(self.num_of_cells_x*self.cell_size+line_start_x)
-        line_start_y = int(self.margin_top)
-        line_stop_y = int(self.num_of_cells_y*self.cell_size+line_start_y)
+        line_start_x = self.margin_left
+        line_stop_x = self.num_of_cells_x*self.cell_size+line_start_x
+        line_start_y = self.margin_top
+        line_stop_y = self.num_of_cells_y*self.cell_size+line_start_y
 
-        #for i in range(line_start_y, line_stop_y+self.cell_size, self.cell_size):
-        #    painter.drawLine(line_start_x, i, line_stop_x, i)
+        for i in range(line_start_y, line_stop_y+self.cell_size, self.cell_size):
+            painter.drawLine(line_start_x, i, line_stop_x, i)
 
-        #for i in range(line_start_x, line_stop_x+self.cell_size, self.cell_size):
-        #    painter.drawLine(i, line_start_y, i, line_stop_y)
+        for i in range(line_start_x, line_stop_x+self.cell_size, self.cell_size):
+            painter.drawLine(i, line_start_y, i, line_stop_y)
 
     def paint_update(self):
         self.cellular_automaton.update_table()
