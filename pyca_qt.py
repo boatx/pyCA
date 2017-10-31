@@ -35,7 +35,7 @@ class CellularAutomatonQt(QWidget):
         self.start_btn.setToolTip('Start simulation')
         self.clear_btn = QPushButton('Clear', self)
         self.clear_btn.setToolTip('Clear board')
-        self.start_btn.clicked.connect(self.start)
+        self.start_btn.clicked.connect(self.toggle)
         self.clear_btn.clicked.connect(self.clean)
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.paint_update)
@@ -104,7 +104,7 @@ class CellularAutomatonQt(QWidget):
             self.timer.stop()
             self.timer.start(self.speed)
 
-    def start(self):
+    def toggle(self):
         """Start simulation"""
         if not self.run:
             self.run = True
@@ -118,7 +118,7 @@ class CellularAutomatonQt(QWidget):
             self.timer.stop()
 
     def clean(self):
-        self.start()
+        self.toggle()
         self.cellular_automaton.clean()
         self.repaint()
 
@@ -146,7 +146,9 @@ class CellularAutomatonQt(QWidget):
         painter.fillRect(event.rect(), QtGui.QBrush(Qt.white))
         painter.setRenderHint(QtGui.QPainter.Antialiasing)
 
-        for i, j in product(range(self.num_of_cells_x), range(self.num_of_cells_y)):
+        cells = product(range(self.num_of_cells_x), range(self.num_of_cells_y))
+
+        for i, j in cells:
 
             i_paint_cord = i*self.cell_size + self.margin_left
 
@@ -159,24 +161,23 @@ class CellularAutomatonQt(QWidget):
                                  self.cell_size,
                                  QtGui.QBrush(QtGui.QColor(color)))
 
-        self._draw_line(painter)
+        self._draw_lines(painter)
         painter.end()
 
-    def _draw_line(self, painter, line_width=1, line_color=Qt.gray,
-                   line_style=Qt.SolidLine):
+    def _draw_lines(self, painter, line_width=1, line_color=Qt.gray,
+                    line_style=Qt.SolidLine):
 
         painter.setPen(QtGui.QPen(QtGui.QBrush(line_color), 1, line_style))
 
-        line_start_x = self.margin_left
-        line_stop_x = self.num_of_cells_x*self.cell_size+line_start_x
-        line_start_y = self.margin_top
-        line_stop_y = self.num_of_cells_y*self.cell_size+line_start_y
+        start_x, start_y = self.margin_left, self.margin_top
+        stop_x = self.num_of_cells_x*self.cell_size + start_x
+        stop_y = self.num_of_cells_y*self.cell_size + start_y
 
-        for i in range(line_start_y, line_stop_y+self.cell_size, self.cell_size):
-            painter.drawLine(line_start_x, i, line_stop_x, i)
+        for i in range(start_y, stop_y + self.cell_size, self.cell_size):
+            painter.drawLine(start_x, i, stop_x, i)
 
-        for i in range(line_start_x, line_stop_x+self.cell_size, self.cell_size):
-            painter.drawLine(i, line_start_y, i, line_stop_y)
+        for i in range(start_x, stop_x + self.cell_size, self.cell_size):
+            painter.drawLine(i, start_y, i, stop_y)
 
     def paint_update(self):
         self.cellular_automaton.update_table()
