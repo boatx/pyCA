@@ -9,8 +9,8 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5 import QtGui
 
-from cellular_automaton import ConwayLifeOutflow, Sand
-from config import (
+from pyca.cellular_automaton import ConwayLifeOutflow, Sand
+from pyca.config import (
     NUM_OF_CELLS_X, NUM_OF_CELLS_Y, CELL_SIZE, MARGIN, WINDOW_Y_SIZE,
     WINDOW_X_SIZE, MIN_SIMULATION_SPEED, MAX_SIMULATION_SPEED,
     DEFAULT_SIMULATION_SPEED
@@ -184,7 +184,7 @@ class CellularAutomatonQt(QWidget):
         self.repaint()
 
 
-if __name__ == '__main__':
+def main():
     app = QApplication(sys.argv)
 
     choose = 'life'
