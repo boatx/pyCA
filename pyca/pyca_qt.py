@@ -140,6 +140,13 @@ class CellularAutomatonQt(QWidget):
             self.cellular_automaton.update_cell(x, y)
             self.repaint()
 
+    def paint_cell(self, i, j, color, painter):
+        i_paint_cord = i*self.cell_size + self.margin_left
+        j_paint_cord = j*self.cell_size + self.margin_top
+        painter.fillRect(
+            i_paint_cord, j_paint_cord, self.cell_size, self.cell_size,
+            QtGui.QBrush(QtGui.QColor(color)))
+
     def paintEvent(self, event):
         painter = QtGui.QPainter()
         painter.begin(self)
@@ -149,17 +156,9 @@ class CellularAutomatonQt(QWidget):
         cells = product(range(self.num_of_cells_x), range(self.num_of_cells_y))
 
         for i, j in cells:
-
-            i_paint_cord = i*self.cell_size + self.margin_left
-
-            j_paint_cord = j*self.cell_size + self.margin_top
-
             to_paint, color = self.cellular_automaton.check_cell(j, i)
-
             if to_paint:
-                painter.fillRect(i_paint_cord, j_paint_cord, self.cell_size,
-                                 self.cell_size,
-                                 QtGui.QBrush(QtGui.QColor(color)))
+                self.paint_cell(i, j, color, painter)
 
         self._draw_lines(painter)
         painter.end()
