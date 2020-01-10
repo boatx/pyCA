@@ -11,7 +11,7 @@
 
 ```bash
 
-python pyca_qt.py
+python main.py
 
 ```
 
