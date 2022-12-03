@@ -79,9 +79,29 @@ class ConwayLifeOutflow(CellularAutomatonBaseClass):
             start_y=1,
         )
 
-        self.table = Matrix.generate_random_matrix(
+        self.table = self._generate_random_matrix_with_empty_borders()
+
+    def _generate_random_matrix_with_empty_borders(self):
+        """
+        Generate random matrix with borders 0 value
+
+        Borders of matrix are not updated, make sure that all borders
+        of random matrix have value 0. Otherwise cells adjacent to
+        borders will behave randomly (depending on value of invisible
+        cell).
+        """
+        table = Matrix.generate_random_matrix(
             self.total_size_x, self.total_size_y, list(self.states.values())
         )
+        for x in range(self.total_size_x):
+            table[0][x] = 0
+            table[self.total_size_y - 1][x] = 0
+
+        for y in range(1, self.total_size_y - 1):
+            table[y][0] = 0
+            table[y][self.total_size_x - 1] = 0
+
+        return table
 
     def get_neighborhood(self, x, y):
         """
