@@ -1,8 +1,10 @@
-import random
+from abc import ABC, abstractmethod
 from itertools import product
 
+from pyca.matrix import Matrix
 
-class CellularAutomatonBaseClass(object):
+
+class CellularAutomatonBaseClass(ABC):
     def __init__(
         self,
         size_x,
@@ -28,14 +30,15 @@ class CellularAutomatonBaseClass(object):
         self.states = states
         self.states_colors = states_colors
 
+    @abstractmethod
     def check_cell(self, x, y):
         """
         Check value of cell (x,y).
         :param int x: x coordinate of cell
         :param int y: y coordinate of cell
         """
-        raise NotImplementedError
 
+    @abstractmethod
     def update_cell(self, x, y, state=None):
         """
         Update state of cell x,y.
@@ -43,73 +46,18 @@ class CellularAutomatonBaseClass(object):
         :param int y: y coordinate of cell
         :param state: state of cell
         """
-        raise NotImplementedError
 
+    @abstractmethod
     def update_table(self):
         """
         Update values of cell table
         """
-        raise NotImplementedError
 
     def clean(self):
         """
         Clean cell table.
         """
-        self.table = self._gen_matrix(self.total_size_x, self.total_size_y)
-
-    def von_neumann_neighborhood(self, x, y, r=1):
-        """
-        Return Von Neumann neighborhood of cell x, y.
-
-        :param int x: cell coordinate
-        :param int y: cell coordinate
-        :rtype: list
-        """
-        raise NotImplementedError
-
-    def moore_neighborhood(self, x, y):
-        """
-        Return Moore neighborhood of cell x, y.
-
-        :param int x: cell coordinate
-        :param int y: cell coordinate
-        :rtype: list
-        """
-        return [row[y - 1 : y + 2] for row in self.table[x - 1 : x + 2]]
-
-    @staticmethod
-    def _gen_random_matrix(x_len, y_len, values):
-        """
-        Generate table of size x_len y_len with random values.
-
-        :param int x_len: length of first dimension of table
-        :param int y_len: length of second dimension of table
-        :param list values: list of values to set randomly
-        """
-        random.seed()
-        end = len(values) - 1
-        return [
-            [values[random.randint(0, end)] for _ in range(x_len)] for _ in range(y_len)
-        ]
-
-    @staticmethod
-    def _gen_matrix(x_len, y_len, value=0):
-        """
-        Generate table of size x_len x y_len and set values of cells to value.
-
-        :param int x_len: length of first dimension of table
-        :param int y_len: length of second dimension of table
-        :param values:
-        """
-        return [[value for _ in range(x_len)] for _ in range(y_len)]
-
-    @staticmethod
-    def _copy_matrix(matrix):
-        """
-        Return copy of matrix.
-        :param list matrix: matrix to copy
-        """
-        return [list(i) for i in matrix]
+        self.table = Matrix.generate_matrix(self.total_size_x, self.total_size_y)
 
 
 class ConwayLifeOutflow(CellularAutomatonBaseClass):
@@ -131,21 +79,29 @@ class ConwayLifeOutflow(CellularAutomatonBaseClass):
             start_y=1,
         )
 
-        self.table = self._gen_random_matrix(
+        self.table = Matrix.generate_random_matrix(
             self.total_size_x, self.total_size_y, list(self.states.values())
         )
 
-    def _neumann_neighborhood_counter(self, x, y, r=1):
-        raise NotImplementedError
+    def get_neighborhood(self, x, y):
+        """
+        Return Moore neighborhood of cell x, y.
 
-    def _moore_neighborhood_counter(self, x, y):
+        :param int x: cell coordinate
+        :param int y: cell coordinate
+        :rtype: list
+        """
+        assert self.table
+        return [row[y - 1 : y + 2] for row in self.table[x - 1 : x + 2]]
+
+    def _count_cells_in_neighborhood(self, x, y):
         """
         Count neighbors of cell x,y in Moore Neighborhood.
         :param int x: x coordinate of cell
         :param int y: y coordinate of cell
         """
         counter = 0
-        for row in self.moore_neighborhood(x, y):
+        for row in self.get_neighborhood(x, y):
             for item in row:
                 if item:
                     counter += 1
@@ -156,10 +112,10 @@ class ConwayLifeOutflow(CellularAutomatonBaseClass):
         return counter
 
     def update_table(self):
-        tmp = self._copy_matrix(self.table)
+        tmp = self.table.copy()
         for i, j in product(range(1, self.size_y + 1), range(1, self.size_x + 1)):
 
-            counter = self._moore_neighborhood_counter(i, j)
+            counter = self._count_cells_in_neighborhood(i, j)
 
             if self.table[i][j]:
                 if counter < 2 or counter > 3:
@@ -208,7 +164,7 @@ class Sand(CellularAutomatonBaseClass):
             start_x=1,
             start_y=1,
         )
-        self.table = self._gen_matrix(self.total_size_x, self.total_size_y, 0)
+        self.table = Matrix.generate_matrix(self.total_size_x, self.total_size_y, 0)
         self.outflow = outflow
         self._add_borders()
 
@@ -238,7 +194,7 @@ class Sand(CellularAutomatonBaseClass):
         if self.table[x + 1][y] == 0:
             self.table[x][y] = 0
             self.table[x + 1][y] = 1
-        elif self.table[x + 1][y + 1] == 0 and self.table[x][x + 1] != 2:
+        elif self.table[x + 1][y + 1] == 0 and self.table[x][y + 1] != 2:
             self.table[x][y] = 0
             self.table[x + 1][y + 1] = 1
         elif self.table[x + 1][y - 1] == 0 and self.table[x][y - 1] == 0:
@@ -259,40 +215,3 @@ class Sand(CellularAutomatonBaseClass):
                 self.table[y][x] = self.states[self.EMPTY]
             else:
                 self.table[y][x] = self.states[self.SAND]
-
-
-class Langtons_Ant(CellularAutomatonBaseClass):
-    BLACK_CELL = "Black_Cell"
-    WHITE_CELL = "White_Cell"
-    ANT = "Ant"
-    STATES = {WHITE_CELL: 0, BLACK_CELL: 1, ANT: 2}
-    STATES_COLORS = {WHITE_CELL: "white", BLACK_CELL: "black", ANT: "red"}
-
-    def __init__(self, num_of_cells_x, num_of_cells_y):
-        super().__init__(
-            num_of_cells_x,
-            num_of_cells_y,
-            num_of_cells_x,
-            num_of_cells_y,
-            self.STATES,
-            states_colors=self.STATES_COLORS,
-            start_x=0,
-            start_y=0,
-        )
-        self.table = self._gen_matrix(self.total_size_x, self.total_size_y, 0)
-        self._add_borders()
-
-    def check_cell(self, x, y):
-        if self.table[x][y] != self.states[self.WHITE_CELL]:
-            return True, self.states_colors[self.table[x][y]]
-        else:
-            return False, None
-
-    def update_cell(self, x, y):
-        if self.table[x][y] != self.states[self.ANT]:
-            self.table[x][y] = self.states[self.ANT]
-        else:
-            self.table[x][y] = self.states[self.WHITE_CELL]
-
-    def update_table(self):
-        raise NotImplementedError
