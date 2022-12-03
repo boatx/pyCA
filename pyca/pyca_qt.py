@@ -1,31 +1,31 @@
 import sys
-from itertools import product
 from functools import partial
+from itertools import product
 
-from PyQt5.QtCore import QTimer, Qt
+from PyQt5 import QtGui
+from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtWidgets import (
-    QWidget,
+    QAction,
     QApplication,
+    QHBoxLayout,
+    QMenuBar,
     QPushButton,
     QSlider,
-    QHBoxLayout,
     QVBoxLayout,
-    QMenuBar,
-    QAction,
+    QWidget,
 )
-from PyQt5 import QtGui
 
 from pyca.cellular_automaton import ConwayLifeOutflow, Sand
 from pyca.config import (
+    CELL_SIZE,
+    DEFAULT_SIMULATION_SPEED,
+    MARGIN,
+    MAX_SIMULATION_SPEED,
+    MIN_SIMULATION_SPEED,
     NUM_OF_CELLS_X,
     NUM_OF_CELLS_Y,
-    CELL_SIZE,
-    MARGIN,
-    WINDOW_Y_SIZE,
     WINDOW_X_SIZE,
-    MIN_SIMULATION_SPEED,
-    MAX_SIMULATION_SPEED,
-    DEFAULT_SIMULATION_SPEED,
+    WINDOW_Y_SIZE,
 )
 
 
@@ -55,7 +55,7 @@ class CellularAutomatonQt(QWidget):
         self.slider.setMaximum(MAX_SIMULATION_SPEED)
         self.slider.setValue(DEFAULT_SIMULATION_SPEED)
         self.slider.setToolTip("Speed of simulation")
-        self.slider.valueChanged.connect(self.set_value)
+        self.slider.valueChanged.connect(self.set_speed_value)
         btn_layout = QHBoxLayout()
         btn_layout.addWidget(self.start_btn)
         btn_layout.addWidget(self.clear_btn)
@@ -109,28 +109,31 @@ class CellularAutomatonQt(QWidget):
         self.margin_top = (height - self.cell_size * self.num_of_cells_y) // 2
         self.repaint()
 
-    def set_value(self):
-        """Set slider value"""
+    def set_speed_value(self):
+        """Set speed value from slider"""
         self.speed = self.slider.value()
         if self.run:
             self.timer.stop()
             self.timer.start(self.speed)
 
+    def stop_simulation(self):
+        self.run = False
+        self.start_btn.setToolTip("Start")
+        self.start_btn.setText("Start simulation")
+        self.timer.stop()
+
     def toggle(self):
-        """Start simulation"""
-        if not self.run:
-            self.run = True
-            self.start_btn.setToolTip("End simulation")
-            self.start_btn.setText("End")
-            self.timer.start(self.speed)
-        else:
-            self.run = False
-            self.start_btn.setToolTip("Start")
-            self.start_btn.setText("Start simulation")
-            self.timer.stop()
+        """Start/Stop simulation"""
+        if self.run:
+            self.stop_simulation()
+            return
+        self.run = True
+        self.start_btn.setToolTip("End simulation")
+        self.start_btn.setText("End")
+        self.timer.start(self.speed)
 
     def clean(self):
-        self.toggle()
+        self.stop_simulation()
         self.cellular_automaton.clean()
         self.repaint()
 
