@@ -1,22 +1,29 @@
 from abc import ABC, abstractmethod
 from itertools import product
+from typing import NamedTuple
 
 from pyca.matrix import Matrix
 
 
+class CellVisibilityState(NamedTuple):
+    visible: bool = False
+    color: str = ""
+
+
 class CellularAutomatonBaseClass(ABC):
+    table: Matrix
+
     def __init__(
         self,
-        size_x,
-        size_y,
-        total_size_x,
-        total_size_y,
-        states,
-        states_colors=None,
-        start_x=0,
-        start_y=0,
+        size_x: int,
+        size_y: int,
+        total_size_x: int,
+        total_size_y: int,
+        states: dict[str, int],
+        states_colors: dict[str, str],
+        start_x: int = 0,
+        start_y: int = 0,
     ):
-
         self.size_x = size_x
         self.size_y = size_y
 
@@ -26,12 +33,18 @@ class CellularAutomatonBaseClass(ABC):
         self.total_size_x = total_size_x
         self.total_size_y = total_size_y
 
-        self.table = None
         self.states = states
         self.states_colors = states_colors
+        self.table = self.init_table()
 
     @abstractmethod
-    def check_cell(self, x, y):
+    def init_table(self) -> Matrix:
+        """
+        Initialize table
+        """
+
+    @abstractmethod
+    def check_cell(self, x: int, y: int) -> CellVisibilityState:
         """
         Check value of cell (x,y).
         :param int x: x coordinate of cell
@@ -39,7 +52,7 @@ class CellularAutomatonBaseClass(ABC):
         """
 
     @abstractmethod
-    def update_cell(self, x, y, state=None):
+    def update_cell(self, x: int, y: int) -> None:
         """
         Update state of cell x,y.
         :param int x: x coordinate of cell
@@ -48,12 +61,12 @@ class CellularAutomatonBaseClass(ABC):
         """
 
     @abstractmethod
-    def update_table(self):
+    def update_table(self) -> Matrix:
         """
         Update values of cell table
         """
 
-    def clean(self):
+    def clean(self) -> None:
         """
         Clean cell table.
         """
@@ -61,13 +74,15 @@ class CellularAutomatonBaseClass(ABC):
 
 
 class ConwayLifeOutflow(CellularAutomatonBaseClass):
-
     DEAD_CELL = "DeadCell"
     LIVE_CELL = "LiveCell"
     STATES = {DEAD_CELL: 0, LIVE_CELL: 1}
     STATES_COLORS = {DEAD_CELL: "white", LIVE_CELL: "blue"}
+    DYING_CELL_LOW_RANGE = 2
+    DYING_CELL_UPPER_RANGE = 3
+    NEW_LIVING_CELL_CONDITION = 3
 
-    def __init__(self, num_of_cells_x, num_of_cells_y):
+    def __init__(self, num_of_cells_x: int, num_of_cells_y: int):
         super().__init__(
             num_of_cells_x,
             num_of_cells_y,
@@ -79,9 +94,10 @@ class ConwayLifeOutflow(CellularAutomatonBaseClass):
             start_y=1,
         )
 
-        self.table = self._generate_random_matrix_with_empty_borders()
+    def init_table(self) -> Matrix:
+        return self._generate_random_matrix_with_empty_borders()
 
-    def _generate_random_matrix_with_empty_borders(self):
+    def _generate_random_matrix_with_empty_borders(self) -> Matrix:
         """
         Generate random matrix with borders 0 value
 
@@ -103,7 +119,7 @@ class ConwayLifeOutflow(CellularAutomatonBaseClass):
 
         return table
 
-    def get_neighborhood(self, x, y):
+    def get_neighborhood(self, x: int, y: int) -> list[list[int]]:
         """
         Return Moore neighborhood of cell x, y.
 
@@ -111,10 +127,9 @@ class ConwayLifeOutflow(CellularAutomatonBaseClass):
         :param int y: cell coordinate
         :rtype: list
         """
-        assert self.table
         return [row[y - 1 : y + 2] for row in self.table[x - 1 : x + 2]]
 
-    def _count_cells_in_neighborhood(self, x, y):
+    def _count_cells_in_neighborhood(self, x: int, y: int) -> int:
         """
         Count neighbors of cell x,y in Moore Neighborhood.
         :param int x: x coordinate of cell
@@ -131,32 +146,35 @@ class ConwayLifeOutflow(CellularAutomatonBaseClass):
 
         return counter
 
-    def update_table(self):
+    def update_table(self) -> Matrix:
         tmp = self.table.copy()
         for i, j in product(range(1, self.size_y + 1), range(1, self.size_x + 1)):
-
             counter = self._count_cells_in_neighborhood(i, j)
 
             if self.table[i][j]:
-                if counter < 2 or counter > 3:
-                    tmp[i][j] = 0
-            else:
-                if counter == 3:
-                    tmp[i][j] = 1
+                if (
+                    counter < self.DYING_CELL_LOW_RANGE
+                    or counter > self.DYING_CELL_UPPER_RANGE
+                ):
+                    tmp[i][j] = self.states[self.DEAD_CELL]
+            elif counter == self.NEW_LIVING_CELL_CONDITION:
+                tmp[i][j] = self.states[self.LIVE_CELL]
 
         self.table = tmp
         return tmp
 
-    def check_cell(self, x, y):
+    def check_cell(self, x: int, y: int) -> CellVisibilityState:
         x += self._start_x
         y += self._start_y
 
         if self.table[x][y] == self.states[self.LIVE_CELL]:
-            return True, self.states_colors[self.LIVE_CELL]
-        else:
-            return False, None
+            return CellVisibilityState(
+                visible=True, color=self.states_colors[self.LIVE_CELL]
+            )
 
-    def update_cell(self, x, y, state=None):
+        return CellVisibilityState()
+
+    def update_cell(self, x: int, y: int) -> None:
         x += self._start_x
         y += self._start_y
 
@@ -173,7 +191,7 @@ class Sand(CellularAutomatonBaseClass):
     STATES = {EMPTY: 0, SAND: 1, SOLID: 2}
     STATES_COLORS = {EMPTY: "white", SAND: "blue", SOLID: "black"}
 
-    def __init__(self, num_of_cells_x, num_of_cells_y, outflow=True):
+    def __init__(self, num_of_cells_x: int, num_of_cells_y: int, outflow: bool = True):
         super().__init__(
             num_of_cells_x,
             num_of_cells_y,
@@ -184,11 +202,13 @@ class Sand(CellularAutomatonBaseClass):
             start_x=1,
             start_y=1,
         )
-        self.table = Matrix.generate_matrix(self.total_size_x, self.total_size_y, 0)
         self.outflow = outflow
         self._add_borders()
 
-    def _add_borders(self):
+    def init_table(self) -> Matrix:
+        return Matrix.generate_matrix(self.total_size_x, self.total_size_y, 0)
+
+    def _add_borders(self) -> None:
         """
         Add 'Solid' border to cell table
         """
@@ -200,7 +220,7 @@ class Sand(CellularAutomatonBaseClass):
             self.table[i][0] = 2
             self.table[i][-3] = 2
 
-    def update_table(self):
+    def update_table(self) -> Matrix:
         for x, y in product(range(self.size_x, -1, -1), range(self.size_y, -1, -1)):
             if self.table[x][y] == 1:
                 out = x in (self.size_y, 0) or y in (self.size_x, 0)
@@ -209,27 +229,34 @@ class Sand(CellularAutomatonBaseClass):
                     self.table[x][y] = 0
                 else:
                     self._move_sand(x, y)
+        return self.table
 
-    def _move_sand(self, x, y):
+    def _move_sand(self, x: int, y: int) -> None:
         if self.table[x + 1][y] == 0:
             self.table[x][y] = 0
             self.table[x + 1][y] = 1
-        elif self.table[x + 1][y + 1] == 0 and self.table[x][y + 1] != 2:
+        elif self.table[x + 1][y + 1] == 0 and self.table[x][y + 1] != 2:  # noqa: PLR2004
             self.table[x][y] = 0
             self.table[x + 1][y + 1] = 1
         elif self.table[x + 1][y - 1] == 0 and self.table[x][y - 1] == 0:
             self.table[x][y] = 0
             self.table[x + 1][y - 1] = 1
 
-    def check_cell(self, x, y):
-        if self.table[x][y] == self.states[self.SAND]:
-            return True, self.states_colors[self.SAND]
-        elif self.table[x][y] == self.states[self.SOLID]:
-            return True, self.states_colors[self.SOLID]
-        else:
-            return False, None
+    def check_cell(self, x: int, y: int) -> CellVisibilityState:
+        cell = self.table[x][y]
+        if cell == self.states[self.SAND]:
+            return CellVisibilityState(
+                visible=True, color=self.states_colors[self.SAND]
+            )
 
-    def update_cell(self, x, y, state=None):
+        if cell == self.states[self.SOLID]:
+            return CellVisibilityState(
+                visible=True, color=self.states_colors[self.SOLID]
+            )
+
+        return CellVisibilityState()
+
+    def update_cell(self, x: int, y: int):
         if self.table[y][x] != self.states[self.SOLID]:
             if self.table[y][x] == self.states[self.SAND]:
                 self.table[y][x] = self.states[self.EMPTY]

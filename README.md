@@ -9,6 +9,12 @@
 
 ## Usage
 
+install dependencies
+
+```bash
+poetry install
+```
+
 ```bash
 
 python main.py
@@ -21,4 +27,4 @@ python main.py
 
 ## Requirements
 
-* python => 3.5
+* python => 3.11
