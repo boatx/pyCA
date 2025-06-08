@@ -18,7 +18,9 @@ from PyQt5.QtWidgets import (
     QWidget,
 )
 
-from pyca.cellular_automaton import CellularAutomatonBaseClass, ConwayLifeOutflow, Sand
+from pyca.cellular_automaton.base import BaseCellularAutomaton
+from pyca.cellular_automaton.conway_life import ConwayLifeOutflow
+from pyca.cellular_automaton.sand import Sand
 from pyca.config import (
     CELL_SIZE,
     DEFAULT_SIMULATION_SPEED,
@@ -42,7 +44,7 @@ class AutomatonType(StrEnum):
 
 
 class CellularAutomatonQt(QWidget):
-    def __init__(self, cellular_automaton: CellularAutomatonBaseClass):
+    def __init__(self, cellular_automaton: BaseCellularAutomaton):
         super().__init__()
 
         self.speed = DEFAULT_SIMULATION_SPEED
@@ -148,7 +150,7 @@ class CellularAutomatonQt(QWidget):
         exit_action.triggered.connect(_on_close)
         exit_menu.addAction(exit_action)
 
-    def set_automaton(self, cellular_automaton: CellularAutomatonBaseClass) -> None:
+    def set_automaton(self, cellular_automaton: BaseCellularAutomaton) -> None:
         self.cellular_automaton = cellular_automaton
         self.num_of_cells_x = self.cellular_automaton.size_x
         self.num_of_cells_y = self.cellular_automaton.size_y
