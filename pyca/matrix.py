@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import random
 from collections import UserList
-from typing import List
+from typing import List, TypeVar
+
+T = TypeVar("T")
 
 
-class Matrix(UserList):
+class Matrix(UserList[list[T]]):
     def copy(self) -> Matrix:
         return Matrix([list(i) for i in self.data])
 
